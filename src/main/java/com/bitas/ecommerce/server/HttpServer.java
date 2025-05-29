@@ -11,8 +11,7 @@ import java.util.concurrent.Executors;
 
 
 public class HttpServer {
-    private static final String SERVER_NAME = "Bitas E-commerce Server";
-    private static final String SERVER_VERSION = "1.0.0";
+
     private final int PORT;
 
     public HttpServer() {
