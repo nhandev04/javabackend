@@ -16,6 +16,10 @@ public class DbConnection {
             this.dbPassword = AppConfig.get("db.password");
 
             Connection connection = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+
+            DatabaseInitializer dbInitializer = new DatabaseInitializer(this);
+            dbInitializer.init();
+            
             System.out.println("✅ Connected to SQL Server successfully!" + connection.getClientInfo());
 
 
