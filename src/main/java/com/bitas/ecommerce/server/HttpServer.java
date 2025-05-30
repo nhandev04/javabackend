@@ -14,6 +14,7 @@ import com.bitas.ecommerce.utils.JsonUtil;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -24,54 +25,65 @@ public class HttpServer {
 
     private final int PORT;
     private final Router router;
-    private final DbConnection dbConnection;
+    private Connection connection;
+
+    private boolean isRunning = true;
 
     public HttpServer() {
-        // Load configuration settings
         this.PORT = AppConfig.getInt("server.port"); // Default to 8080 if not set
+        this.router = new Router();
+    }
 
-        // Initialize database connection
-        this.dbConnection = new DbConnection();
+    public void startServer() {
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            System.out.println("Server is listening http://localhost:" + PORT);
 
+            int cpu = Runtime.getRuntime().availableProcessors();
+
+            int threadCount = cpu * 4;
+            ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+
+            while (isRunning) {
+                Socket clientSocket = serverSocket.accept();
+                executor.submit(() -> this.handleClient(clientSocket));
+            }
+
+        } catch (IOException e) {
+            System.err.println("Could not start server: " + e.getMessage());
+        }
+    }
+
+    public Connection connectDatabase() {
+        // Create a new DbConnection instance to establish the connection
+        DbConnection dbConnection = new DbConnection();
+        this.connection = dbConnection.getConnection();
+        
+        System.out.println("✅ Connected to SQL Server successfully");
+        return dbConnection.getConnection();
+    }
+
+    public void createRouter(Connection connection) {
         // Initialize repositories
-        UserRepository userRepository = new UserRepository(dbConnection);
-        ProductRepository productRepository = new ProductRepository(dbConnection);
+        UserRepository userRepository = new UserRepository(connection);
+        ProductRepository productRepository = new ProductRepository(connection);
 
         // Initialize services
         UserService userService = new UserService(userRepository);
         ProductService productService = new ProductService(productRepository);
 
-        // Initialize JSON utility
-        JsonUtil jsonUtil = new JsonUtil();
-
         // Initialize controllers
-        UserController userController = new UserController(userService, jsonUtil);
-        ProductController productController = new ProductController(productService, jsonUtil);
+        UserController userController = new UserController(userService);
+        ProductController productController = new ProductController(productService);
+
 
         // Initialize router
-        this.router = new Router(userController, productController, jsonUtil);
-    }
+        router.pushRoute("GET", "/users", (path, body, headers) -> userController.getAllUsers());
+        router.pushRoute("GET", "/users/:id", (path, body, headers) -> userController.getUser(body));
 
-    public void start() {
 
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("Server is listening http://localhost:" + PORT);
+        router.pushRoute("GET", "/products", (path, body, headers) -> productController.getAllProducts());
+        router.pushRoute("GET", "/products/:id", (path, body, headers) -> productController.getProduct(body));
 
-            System.out.println("Database connection established: " + (dbConnection.getDbUser() != null));
-
-            int cpu = Runtime.getRuntime().availableProcessors();
-            System.out.println("Available processors: " + cpu);
-
-            int threadCount = cpu * 4;
-            ExecutorService executor = Executors.newFixedThreadPool(threadCount);
-
-            while (true) {
-                Socket clientSocket = serverSocket.accept();
-                executor.submit(() -> handleClient(clientSocket));
-            }
-        } catch (IOException e) {
-            System.err.println("Could not start server: " + e.getMessage());
-        }
     }
 
     private void handleClient(Socket socket) {
@@ -90,7 +102,7 @@ public class HttpServer {
             // Parse the request line (e.g., "GET /users HTTP/1.1")
             String[] requestParts = requestLine.split(" ");
             if (requestParts.length < 3) {
-                sendErrorResponse(out, 400, "Bad Request");
+                this.sendErrorResponse(out, 400, "Bad Request");
                 return;
             }
 
@@ -121,7 +133,7 @@ public class HttpServer {
             }
 
             // Use the router to handle the request
-            String responseBody = router.handleRequest(method, path, headers, body);
+            String responseBody = this.router.handleRequest(method, path, headers, body);
 
             // Create HTTP response
             String response = "HTTP/1.1 200 OK\r\n" +
@@ -147,14 +159,7 @@ public class HttpServer {
         }
     }
 
-    /**
-     * Send an error response to the client
-     * 
-     * @param out BufferedWriter to write the response
-     * @param statusCode HTTP status code
-     * @param message Error message
-     * @throws IOException if an I/O error occurs
-     */
+
     private void sendErrorResponse(BufferedWriter out, int statusCode, String message) throws IOException {
         Map<String, Object> error = new HashMap<>();
         error.put("status", statusCode);
@@ -175,4 +180,30 @@ public class HttpServer {
         out.flush();
     }
 
+    public Connection getConnection() {
+        return this.connection;
+    }
+
+    public int getPort() {
+        return this.PORT;
+    }
+
+    public Router getRouter() {
+        return this.router;
+    }
+
+
+    public void closDatabase() {
+        if (this.connection != null) {
+            try {
+                this.connection.close();
+            } catch (java.sql.SQLException e) {
+                System.err.println("❗ Error closing database connection: " + e.getMessage());
+            }
+        }
+    }
+
+    public void closeServer() {
+        this.isRunning = false;
+    }
 }

@@ -1,7 +1,6 @@
 package com.bitas.ecommerce.repository;
 
 import com.bitas.ecommerce.model.Product;
-import com.bitas.ecommerce.utils.DbConnection;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -14,13 +13,13 @@ import java.util.Optional;
  * Handles database operations related to products.
  */
 public class ProductRepository {
-    private final DbConnection dbConnection;
+    private final Connection connection;
 
     /**
      * Constructor with DbConnection dependency
      */
-    public ProductRepository(DbConnection dbConnection) {
-        this.dbConnection = dbConnection;
+    public ProductRepository(Connection connection) {
+        this.connection = connection;
     }
 
     /**
@@ -33,11 +32,7 @@ public class ProductRepository {
         // SQL query to find product by ID
         String sql = "SELECT * FROM products WHERE id = ?";
 
-        try (Connection conn = DriverManager.getConnection(
-                dbConnection.getDbUrl(),
-                dbConnection.getDbUser(),
-                dbConnection.getDbPassword());
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setLong(1, id);
             ResultSet rs = stmt.executeQuery();
@@ -64,11 +59,7 @@ public class ProductRepository {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT * FROM products WHERE category = ?";
 
-        try (Connection conn = DriverManager.getConnection(
-                dbConnection.getDbUrl(),
-                dbConnection.getDbUser(),
-                dbConnection.getDbPassword());
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setString(1, category);
             ResultSet rs = stmt.executeQuery();
@@ -94,11 +85,7 @@ public class ProductRepository {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT * FROM products";
 
-        try (Connection conn = DriverManager.getConnection(
-                dbConnection.getDbUrl(),
-                dbConnection.getDbUser(),
-                dbConnection.getDbPassword());
-             Statement stmt = conn.createStatement();
+        try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
@@ -138,11 +125,7 @@ public class ProductRepository {
                 "image_url, active, created_at, updated_at) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = DriverManager.getConnection(
-                dbConnection.getDbUrl(),
-                dbConnection.getDbUser(),
-                dbConnection.getDbPassword());
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             LocalDateTime now = LocalDateTime.now();
 
@@ -187,11 +170,7 @@ public class ProductRepository {
                 "stock_quantity = ?, category = ?, image_url = ?, active = ?, " +
                 "updated_at = ? WHERE id = ?";
 
-        try (Connection conn = DriverManager.getConnection(
-                dbConnection.getDbUrl(),
-                dbConnection.getDbUser(),
-                dbConnection.getDbPassword());
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             LocalDateTime now = LocalDateTime.now();
 
@@ -225,11 +204,7 @@ public class ProductRepository {
     public boolean deleteById(Long id) {
         String sql = "DELETE FROM products WHERE id = ?";
 
-        try (Connection conn = DriverManager.getConnection(
-                dbConnection.getDbUrl(),
-                dbConnection.getDbUser(),
-                dbConnection.getDbPassword());
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setLong(1, id);
             int affectedRows = stmt.executeUpdate();

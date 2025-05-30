@@ -8,6 +8,7 @@ public class DbConnection {
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
+    private Connection connection;
 
     public DbConnection() {
         try {
@@ -16,29 +17,33 @@ public class DbConnection {
             this.dbPassword = AppConfig.get("db.password");
 
             Connection connection = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+            this.connection = connection;
 
-            DatabaseInitializer dbInitializer = new DatabaseInitializer(this);
+            DatabaseInitializer dbInitializer = new DatabaseInitializer(connection);
             dbInitializer.init();
-            
-            System.out.println("✅ Connected to SQL Server successfully!" + connection.getClientInfo());
-
 
         } catch (SQLException e) {
             System.err.println("❌ Failed to connect to the database:");
             e.printStackTrace();
         }
     }
-
-
+    
     public String getDbPassword() {
-        return dbPassword;
+        return this.dbPassword;
     }
 
     public String getDbUrl() {
-        return dbUrl;
+        return this.dbUrl;
     }
 
     public String getDbUser() {
-        return dbUser;
+        return this.dbUser;
+    }
+
+    public Connection getConnection() {
+        if (this.connection == null) {
+            throw new IllegalStateException("Database connection has not been established.");
+        }
+        return this.connection;
     }
 }

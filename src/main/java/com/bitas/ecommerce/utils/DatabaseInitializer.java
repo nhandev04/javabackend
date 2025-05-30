@@ -4,37 +4,39 @@ import com.bitas.ecommerce.schema.ProductSchema;
 import com.bitas.ecommerce.schema.UserSchema;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.Statement;
 
 public class DatabaseInitializer {
 
-    private final DbConnection dbConnection;
+    private final Connection connection;
 
-    public DatabaseInitializer(DbConnection dbConnection) {
-        this.dbConnection = dbConnection;
+    public DatabaseInitializer(Connection connection) {
+        this.connection = connection;
+    }
+
+    private void tryExecute(Statement stmt, String sql, String description) {
+        try {
+            stmt.execute(sql);
+            System.out.println("✔ " + description);
+        } catch (Exception e) {
+            System.out.println("✔ " + description + " → " + e.getMessage());
+        }
     }
 
     public void init() {
-        try (Connection conn = DriverManager.getConnection(
-                dbConnection.getDbUrl(),
-                dbConnection.getDbUser(),
-                dbConnection.getDbPassword());
-             Statement stmt = conn.createStatement()) {
-
+        try (Statement stmt = connection.createStatement()) {
             // Tạo bảng Product nếu chưa có
-            stmt.execute(ProductSchema.CREATE_TABLE);
-            stmt.execute(ProductSchema.CREATE_INDEX_CATEGORY);
-            stmt.execute(ProductSchema.CREATE_INDEX_ACTIVE);
+            tryExecute(stmt, ProductSchema.CREATE_TABLE, "Create Product table");
+            tryExecute(stmt, ProductSchema.CREATE_INDEX_CATEGORY, "Create index on Product category");
+            tryExecute(stmt, ProductSchema.CREATE_INDEX_ACTIVE, "Create index on Product active status");
 
             // Tạo bảng User nếu chưa có
-            stmt.execute(UserSchema.CREATE_TABLE);
-            stmt.execute(UserSchema.CREATE_INDEX_ACTIVE);
+            tryExecute(stmt, UserSchema.CREATE_TABLE, "Create User table");
+            tryExecute(stmt, UserSchema.CREATE_INDEX_ACTIVE, "Create index on User active status");
 
             System.out.println("Database schema initialized successfully.");
-
         } catch (Exception e) {
-            System.err.println("Error initializing database schema: " + e.getMessage());
+            System.err.println("Unexpected error when initializing schema: " + e.getMessage());
         }
     }
 }

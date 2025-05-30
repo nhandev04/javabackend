@@ -16,26 +16,30 @@ import java.util.Optional;
 public class UserController {
     private final UserService userService;
     private final JsonUtil jsonUtil;
-    
+
     /**
      * Constructor with UserService dependency
      */
-    public UserController(UserService userService, JsonUtil jsonUtil) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.jsonUtil = jsonUtil;
+        this.jsonUtil = new JsonUtil();
     }
-    
+
     /**
      * Handle GET request for a user by ID
-     * 
-     * @param id User ID
+     *
+     * @param requestBody User ID
      * @return JSON response with user data or error message
      */
-    public String getUser(String id) {
+    public String getUser(String requestBody) {
+
+        Map<String, Object> bodyMap = jsonUtil.fromJson(requestBody, Map.class);
+        String id = bodyMap.get("id") != null ? bodyMap.get("id").toString() : null;
+
         try {
             Long userId = Long.parseLong(id);
             Optional<User> userOpt = userService.getUserById(userId);
-            
+
             if (userOpt.isPresent()) {
                 return jsonUtil.toJson(userOpt.get());
             } else {
@@ -47,10 +51,10 @@ public class UserController {
             return createErrorResponse(500, "Error retrieving user: " + e.getMessage());
         }
     }
-    
+
     /**
      * Handle GET request for all users
-     * 
+     *
      * @return JSON response with list of users
      */
     public String getAllUsers() {
@@ -61,10 +65,10 @@ public class UserController {
             return createErrorResponse(500, "Error retrieving users: " + e.getMessage());
         }
     }
-    
+
     /**
      * Handle POST request to create a new user
-     * 
+     *
      * @param requestBody JSON request body with user data
      * @return JSON response with created user or error message
      */
@@ -79,11 +83,11 @@ public class UserController {
             return createErrorResponse(500, "Error creating user: " + e.getMessage());
         }
     }
-    
+
     /**
      * Handle PUT request to update an existing user
-     * 
-     * @param id User ID
+     *
+     * @param id          User ID
      * @param requestBody JSON request body with updated user data
      * @return JSON response with updated user or error message
      */
@@ -101,10 +105,10 @@ public class UserController {
             return createErrorResponse(500, "Error updating user: " + e.getMessage());
         }
     }
-    
+
     /**
      * Handle DELETE request to delete a user
-     * 
+     *
      * @param id User ID
      * @return JSON response with success or error message
      */
@@ -112,7 +116,7 @@ public class UserController {
         try {
             Long userId = Long.parseLong(id);
             boolean deleted = userService.deleteUser(userId);
-            
+
             if (deleted) {
                 Map<String, String> response = new HashMap<>();
                 response.put("message", "User deleted successfully");
@@ -126,10 +130,10 @@ public class UserController {
             return createErrorResponse(500, "Error deleting user: " + e.getMessage());
         }
     }
-    
+
     /**
      * Handle POST request for user authentication
-     * 
+     *
      * @param requestBody JSON request body with username and password
      * @return JSON response with authenticated user or error message
      */
@@ -138,13 +142,13 @@ public class UserController {
             Map<String, String> credentials = jsonUtil.fromJson(requestBody, Map.class);
             String username = credentials.get("username");
             String password = credentials.get("password");
-            
+
             if (username == null || password == null) {
                 return createErrorResponse(400, "Username and password are required");
             }
-            
+
             Optional<User> userOpt = userService.authenticateUser(username, password);
-            
+
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
                 // Don't include password in response
@@ -157,12 +161,12 @@ public class UserController {
             return createErrorResponse(500, "Error during authentication: " + e.getMessage());
         }
     }
-    
+
     /**
      * Create a JSON error response
-     * 
+     *
      * @param statusCode HTTP status code
-     * @param message Error message
+     * @param message    Error message
      * @return JSON string with error details
      */
     private String createErrorResponse(int statusCode, String message) {
@@ -171,4 +175,5 @@ public class UserController {
         error.put("error", message);
         return jsonUtil.toJson(error);
     }
+
 }
