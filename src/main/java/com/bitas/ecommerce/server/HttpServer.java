@@ -8,7 +8,7 @@ import com.bitas.ecommerce.router.Router;
 import com.bitas.ecommerce.service.ProductService;
 import com.bitas.ecommerce.service.UserService;
 import com.bitas.ecommerce.utils.AppConfig;
-import com.bitas.ecommerce.utils.DbConnection;
+import com.bitas.ecommerce.utils.database.DbConnection;
 import com.bitas.ecommerce.utils.JsonUtil;
 
 import java.io.*;
@@ -62,10 +62,10 @@ public class HttpServer {
         return dbConnection.getConnection();
     }
 
-    public void createRouter(Connection connection) {
+    public void createRouter() {
         // Initialize repositories
-        UserRepository userRepository = new UserRepository(connection);
-        ProductRepository productRepository = new ProductRepository(connection);
+        UserRepository userRepository = new UserRepository();
+        ProductRepository productRepository = new ProductRepository();
 
         // Initialize services
         UserService userService = new UserService(userRepository);

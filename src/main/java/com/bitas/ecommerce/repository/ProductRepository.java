@@ -1,6 +1,7 @@
 package com.bitas.ecommerce.repository;
 
 import com.bitas.ecommerce.model.Product;
+import com.bitas.ecommerce.utils.database.ConnectionPool;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -13,14 +14,6 @@ import java.util.Optional;
  * Handles database operations related to products.
  */
 public class ProductRepository {
-    private final Connection connection;
-
-    /**
-     * Constructor with DbConnection dependency
-     */
-    public ProductRepository(Connection connection) {
-        this.connection = connection;
-    }
 
     /**
      * Find product by ID
@@ -31,7 +24,7 @@ public class ProductRepository {
     public Optional<Product> findById(Long id) {
         // SQL query to find product by ID
         String sql = "SELECT * FROM products WHERE id = ?";
-
+        Connection connection =  ConnectionPool.getConnection();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setLong(1, id);
@@ -58,7 +51,7 @@ public class ProductRepository {
     public List<Product> findByCategory(String category) {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT * FROM products WHERE category = ?";
-
+        Connection connection =  ConnectionPool.getConnection();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setString(1, category);
@@ -84,7 +77,7 @@ public class ProductRepository {
     public List<Product> findAll() {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT * FROM products";
-
+        Connection connection =  ConnectionPool.getConnection();
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
@@ -124,7 +117,7 @@ public class ProductRepository {
         String sql = "INSERT INTO products (name, description, price, stock_quantity, category, " +
                 "image_url, active, created_at, updated_at) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
+        Connection connection =  ConnectionPool.getConnection();
         try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             LocalDateTime now = LocalDateTime.now();
@@ -169,7 +162,7 @@ public class ProductRepository {
         String sql = "UPDATE products SET name = ?, description = ?, price = ?, " +
                 "stock_quantity = ?, category = ?, image_url = ?, active = ?, " +
                 "updated_at = ? WHERE id = ?";
-
+        Connection connection =  ConnectionPool.getConnection();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             LocalDateTime now = LocalDateTime.now();
@@ -203,7 +196,7 @@ public class ProductRepository {
      */
     public boolean deleteById(Long id) {
         String sql = "DELETE FROM products WHERE id = ?";
-
+        Connection connection =  ConnectionPool.getConnection();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setLong(1, id);

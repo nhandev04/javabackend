@@ -1,6 +1,7 @@
 package com.bitas.ecommerce.repository;
 
 import com.bitas.ecommerce.model.User;
+import com.bitas.ecommerce.utils.database.ConnectionPool;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -12,15 +13,6 @@ import java.util.Optional;
  * Handles database operations related to users.
  */
 public class UserRepository {
-    private final Connection connection;
-
-    /**
-     * Constructor with DbConnection dependency
-     */
-    public UserRepository(Connection connection) {
-        this.connection = connection;
-    }
-
     /**
      * Find user by ID
      *
@@ -30,7 +22,7 @@ public class UserRepository {
     public Optional<User> findById(Long id) {
         // SQL query to find user by ID
         String sql = "SELECT * FROM users WHERE id = ?";
-
+        Connection connection =  ConnectionPool.getConnection();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setLong(1, id);
@@ -57,6 +49,7 @@ public class UserRepository {
     public Optional<User> findByUsername(String username) {
         // SQL query to find user by username
         String sql = "SELECT * FROM users WHERE username = ?";
+        Connection connection =  ConnectionPool.getConnection();
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
@@ -83,6 +76,7 @@ public class UserRepository {
     public List<User> findAll() {
         List<User> users = new ArrayList<>();
         String sql = "SELECT * FROM users";
+        Connection connection =  ConnectionPool.getConnection();
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -122,7 +116,7 @@ public class UserRepository {
     private User insert(User user) {
         String sql = "INSERT INTO users (username, email, password, full_name, role, active) " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
-
+        Connection connection =  ConnectionPool.getConnection();
         try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, user.getUsername());
             stmt.setString(2, user.getEmail());
@@ -157,7 +151,7 @@ public class UserRepository {
     private User update(User user) {
         String sql = "UPDATE users SET username = ?, email = ?, password = ?, " +
                 "full_name = ?, role = ?, active = ? WHERE id = ?";
-
+        Connection connection =  ConnectionPool.getConnection();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setString(1, user.getUsername());
@@ -185,7 +179,7 @@ public class UserRepository {
      */
     public boolean deleteById(Long id) {
         String sql = "DELETE FROM users WHERE id = ?";
-
+        Connection connection =  ConnectionPool.getConnection();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setLong(1, id);

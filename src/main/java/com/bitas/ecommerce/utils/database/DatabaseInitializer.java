@@ -1,4 +1,4 @@
-package com.bitas.ecommerce.utils;
+package com.bitas.ecommerce.utils.database;
 
 import com.bitas.ecommerce.schema.ProductSchema;
 import com.bitas.ecommerce.schema.UserSchema;
