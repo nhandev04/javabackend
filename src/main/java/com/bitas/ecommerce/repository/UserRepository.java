@@ -186,7 +186,6 @@ public class UserRepository {
             int affectedRows = stmt.executeUpdate();
 
             return affectedRows > 0;
-
         } catch (SQLException e) {
             System.err.println("Error deleting user: " + e.getMessage());
             return false;

@@ -2,6 +2,11 @@ package com.bitas.ecommerce.router;
 
 import com.bitas.ecommerce.functional.TriFunction;
 import com.bitas.ecommerce.utils.JsonUtil;
+import com.bitas.ecommerce.controller.UserController;
+import com.bitas.ecommerce.controller.AuthController;
+import com.bitas.ecommerce.repository.UserRepository;
+import com.bitas.ecommerce.service.UserService;
+import com.bitas.ecommerce.service.AuthService;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -27,6 +32,24 @@ public class Router {
      */
     public Router() {
         this.jsonUtil = new JsonUtil();
+        // Dependency setup
+        UserRepository userRepository = new UserRepository();
+        UserService userService = new UserService(userRepository);
+        AuthService authService = new AuthService(userService);
+        UserController userController = new UserController(userService);
+        AuthController authController = new AuthController(authService);
+
+        // User routes
+        pushRoute("POST", "/users", (path, body, headers) -> userController.createUser(body));
+        pushRoute("PUT", Pattern.compile("/users/\\d+"), (path, body, headers) -> {
+            String id = path.substring(path.lastIndexOf('/') + 1);
+            return userController.updateUser(id, body);
+        });
+
+        // Auth routes
+        pushRoute("POST", "/auth/login", (path, body, headers) -> authController.login(body));
+        pushRoute("GET", "/auth/getme", (path, body, headers) -> authController.getMe(headers));
+        pushRoute("POST", "/auth/logout", (path, body, headers) -> authController.logout(headers));
     }
 
     /**

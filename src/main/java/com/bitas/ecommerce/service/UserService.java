@@ -3,6 +3,8 @@ package com.bitas.ecommerce.service;
 import com.bitas.ecommerce.model.User;
 import com.bitas.ecommerce.repository.UserRepository;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,8 +52,8 @@ public class UserService {
     }
     
     /**
-     * Create a new user
-     * 
+     * Create a new user with hashed password
+     *
      * @param user User to create
      * @return Created user with ID
      */
@@ -69,13 +71,16 @@ public class UserService {
             user.setRole("USER");
         }
         
+        // Hash password
+        user.setPassword(hashPassword(user.getPassword()));
+
         // Save user
         return userRepository.save(user);
     }
     
     /**
-     * Update an existing user
-     * 
+     * Update an existing user (does not re-hash password unless changed)
+     *
      * @param id User ID
      * @param user User data to update
      * @return Updated user
@@ -96,6 +101,11 @@ public class UserService {
             throw new IllegalArgumentException("Username already exists");
         }
         
+        // Hash password if changed
+        if (!user.getPassword().equals(existingUser.get().getPassword())) {
+            user.setPassword(hashPassword(user.getPassword()));
+        }
+
         // Set ID and save
         user.setId(id);
         return userRepository.save(user);
@@ -123,8 +133,9 @@ public class UserService {
         
         if (userOpt.isPresent()) {
             User user = userOpt.get();
+            String hashedPassword = hashPassword(password);
             // In a real application, you would use a password encoder to compare passwords
-            if (user.getPassword().equals(password) && user.isActive()) {
+            if (user.getPassword().equals(hashedPassword) && user.isActive()) {
                 return Optional.of(user);
             }
         }
@@ -153,4 +164,27 @@ public class UserService {
         
         // Add more validation as needed
     }
+
+    /**
+     * Hash password using SHA-256
+     *
+     * @param password Password to hash
+     * @return Hashed password
+     */
+    private String hashPassword(String password) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(password.getBytes());
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Error hashing password", e);
+        }
+    }
 }
+

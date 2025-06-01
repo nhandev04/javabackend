@@ -8,9 +8,8 @@ public class Main {
         HttpServer server = new HttpServer();
 
         try {
-            // Create repositories and services (connection pool đã init sẵn)
+            // Create repositories and services
             server.createRouter();
-
             // Start the server
             server.startServer();
         } catch (Exception e) {
