@@ -10,7 +10,7 @@ import java.util.Vector;
 public class ConnectionPool {
     private static final Vector<Connection> pool = new Vector<>();
     private static final int POOL_SIZE = 5;
-    private static final int TIMEOUT_MS = 5000; // 5s timeout khi chờ connection
+    private static final int TIMEOUT_MS = 10000; // 5s timeout khi chờ connection
 
     static {
         try {
@@ -63,9 +63,15 @@ public class ConnectionPool {
     }
 
     public static void releaseConnection(Connection conn) {
-        synchronized (pool) {
-            pool.add(conn);
-            pool.notify(); // Báo cho thread đang chờ
+        try {
+            if (conn != null && !conn.isClosed()) {
+                synchronized (pool) {
+                    pool.add(conn);
+                    pool.notify();
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("❌ Error releasing database connection", e);
         }
     }
 

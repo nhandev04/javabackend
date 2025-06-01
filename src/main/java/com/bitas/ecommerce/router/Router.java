@@ -95,13 +95,15 @@ public class Router {
 
     // Route class to encapsulate route information
     private static class Route {
+
         private final String method;
         private final Object pathMatcher; // Can be String or Pattern
         private final TriFunction<String, String, Map<String, String>, String> action;
 
         public Route(String method, Object pathMatcher, TriFunction<String, String, Map<String, String>, String> action) {
+            String API_BASE_PATH = "/api/v1";
             this.method = method;
-            this.pathMatcher = pathMatcher;
+            this.pathMatcher = API_BASE_PATH +  pathMatcher;
             this.action = action;
         }
 

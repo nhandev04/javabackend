@@ -35,6 +35,8 @@ public class UserRepository {
 
         } catch (SQLException e) {
             System.err.println("Error finding user by ID: " + e.getMessage());
+        } finally {
+            ConnectionPool.releaseConnection(connection);
         }
 
         return Optional.empty();
@@ -49,10 +51,9 @@ public class UserRepository {
     public Optional<User> findByUsername(String username) {
         // SQL query to find user by username
         String sql = "SELECT * FROM users WHERE username = ?";
+
         Connection connection =  ConnectionPool.getConnection();
-
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
 
@@ -60,9 +61,10 @@ public class UserRepository {
                 User user = mapResultSetToUser(rs);
                 return Optional.of(user);
             }
-
         } catch (SQLException e) {
             System.err.println("Error finding user by username: " + e.getMessage());
+        } finally {
+            ConnectionPool.releaseConnection(connection);
         }
 
         return Optional.empty();
@@ -88,6 +90,8 @@ public class UserRepository {
 
         } catch (SQLException e) {
             System.err.println("Error finding all users: " + e.getMessage());
+        } finally {
+            ConnectionPool.releaseConnection(connection);
         }
 
         return users;
@@ -137,6 +141,8 @@ public class UserRepository {
 
         } catch (SQLException e) {
             System.err.println("Error inserting user: " + e.getMessage());
+        } finally {
+            ConnectionPool.releaseConnection(connection);
         }
 
         return user;
@@ -166,6 +172,8 @@ public class UserRepository {
 
         } catch (SQLException e) {
             System.err.println("Error updating user: " + e.getMessage());
+        } finally {
+            ConnectionPool.releaseConnection(connection);
         }
 
         return user;
@@ -189,6 +197,8 @@ public class UserRepository {
         } catch (SQLException e) {
             System.err.println("Error deleting user: " + e.getMessage());
             return false;
+        } finally {
+            ConnectionPool.releaseConnection(connection);
         }
     }
 
@@ -211,3 +221,4 @@ public class UserRepository {
         return user;
     }
 }
+

@@ -37,6 +37,8 @@ public class ProductRepository {
 
         } catch (SQLException e) {
             System.err.println("Error finding product by ID: " + e.getMessage());
+        } finally {
+            ConnectionPool.releaseConnection(connection);
         }
 
         return Optional.empty();
@@ -64,6 +66,8 @@ public class ProductRepository {
 
         } catch (SQLException e) {
             System.err.println("Error finding products by category: " + e.getMessage());
+        } finally {
+            ConnectionPool.releaseConnection(connection);
         }
 
         return products;
@@ -88,6 +92,8 @@ public class ProductRepository {
 
         } catch (SQLException e) {
             System.err.println("Error finding all products: " + e.getMessage());
+        } finally {
+            ConnectionPool.releaseConnection(connection);
         }
 
         return products;
@@ -147,6 +153,8 @@ public class ProductRepository {
 
         } catch (SQLException e) {
             System.err.println("Error inserting product: " + e.getMessage());
+        } finally {
+            ConnectionPool.releaseConnection(connection);
         }
 
         return product;
@@ -183,6 +191,8 @@ public class ProductRepository {
 
         } catch (SQLException e) {
             System.err.println("Error updating product: " + e.getMessage());
+        } finally {
+            ConnectionPool.releaseConnection(connection);
         }
 
         return product;
@@ -207,6 +217,8 @@ public class ProductRepository {
         } catch (SQLException e) {
             System.err.println("Error deleting product: " + e.getMessage());
             return false;
+        } finally {
+            ConnectionPool.releaseConnection(connection);
         }
     }
 
@@ -241,3 +253,4 @@ public class ProductRepository {
         return product;
     }
 }
+

@@ -2,11 +2,13 @@ package com.bitas.ecommerce.server;
 
 import com.bitas.ecommerce.controller.ProductController;
 import com.bitas.ecommerce.controller.UserController;
+import com.bitas.ecommerce.controller.AuthController;
 import com.bitas.ecommerce.repository.ProductRepository;
 import com.bitas.ecommerce.repository.UserRepository;
 import com.bitas.ecommerce.router.Router;
 import com.bitas.ecommerce.service.ProductService;
 import com.bitas.ecommerce.service.UserService;
+import com.bitas.ecommerce.service.AuthService;
 import com.bitas.ecommerce.utils.AppConfig;
 import com.bitas.ecommerce.utils.database.DbConnection;
 import com.bitas.ecommerce.utils.JsonUtil;
@@ -70,20 +72,57 @@ public class HttpServer {
         // Initialize services
         UserService userService = new UserService(userRepository);
         ProductService productService = new ProductService(productRepository);
+        AuthService authService = new AuthService(userService); // Add AuthService
 
         // Initialize controllers
         UserController userController = new UserController(userService);
         ProductController productController = new ProductController(productService);
+        AuthController authController = new AuthController(authService); // Add AuthController
 
-
-        // Initialize router
+        // User routes
         router.pushRoute("GET", "/users", (path, body, headers) -> userController.getAllUsers());
         router.pushRoute("GET", "/users/:id", (path, body, headers) -> userController.getUser(body));
+        router.pushRoute("POST", "/users", (path, body, headers) -> userController.createUser(body));
+        router.pushRoute("PUT", "/users/:id", (path, body, headers) -> {
+            String id = path.split("/")[2];
+            return userController.updateUser(id, body);
+        });
+        router.pushRoute("DELETE", "/users/:id", (path, body, headers) -> {
+            String id = path.split("/")[2];
+            return userController.deleteUser(id);
+        });
+        router.pushRoute("POST", "/users/authenticate", (path, body, headers) -> userController.authenticateUser(body));
 
-
+        // Product routes
         router.pushRoute("GET", "/products", (path, body, headers) -> productController.getAllProducts());
         router.pushRoute("GET", "/products/:id", (path, body, headers) -> productController.getProduct(body));
+        router.pushRoute("POST", "/products", (path, body, headers) -> productController.createProduct(body));
+        router.pushRoute("PUT", "/products/:id", (path, body, headers) -> {
+            String id = path.split("/")[2];
+            return productController.updateProduct(id, body);
+        });
+        router.pushRoute("DELETE", "/products/:id", (path, body, headers) -> {
+            String id = path.split("/")[2];
+            return productController.deleteProduct(id);
+        });
+        router.pushRoute("PATCH", "/products/:id/stock", (path, body, headers) -> {
+            String id = path.split("/")[2];
+            return productController.updateStockQuantity(id, body);
+        });
+        router.pushRoute("PATCH", "/products/:id/price", (path, body, headers) -> {
+            String id = path.split("/")[2];
+            return productController.updatePrice(id, body);
+        });
+        router.pushRoute("GET", "/products/category/:category", (path, body, headers) -> {
+            String[] parts = path.split("/");
+            String category = parts.length > 3 ? parts[3] : "";
+            return productController.getProductsByCategory(category);
+        });
 
+        // Auth routes
+        router.pushRoute("POST", "/auth/login", (path, body, headers) -> authController.login(body));
+        router.pushRoute("GET", "/auth/me", (path, body, headers) -> authController.getMe(headers));
+        router.pushRoute("POST", "/auth/logout", (path, body, headers) -> authController.logout(headers));
     }
 
     private void handleClient(Socket socket) {
