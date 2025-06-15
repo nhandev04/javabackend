@@ -4,13 +4,9 @@ import com.bitas.ecommerce.server.HttpServer;
 
 public class Main {
     public static void main(String[] args) {
-        // Initialize the HTTP server
-        HttpServer server = new HttpServer();
-
+        HttpServer server = HttpServer.getInstance();
         try {
-            // Create repositories and services
             server.createRouter();
-            // Start the server
             server.startServer();
         } catch (Exception e) {
             System.err.println("❌ Error starting server: " + e.getMessage());

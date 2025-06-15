@@ -2,61 +2,52 @@ package com.bitas.ecommerce.router;
 
 import com.bitas.ecommerce.functional.TriFunction;
 import com.bitas.ecommerce.utils.JsonUtil;
-import com.bitas.ecommerce.controller.UserController;
-import com.bitas.ecommerce.controller.AuthController;
-import com.bitas.ecommerce.repository.UserRepository;
-import com.bitas.ecommerce.service.UserService;
-import com.bitas.ecommerce.service.AuthService;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Router class for handling HTTP requests and routing them to the appropriate controller.
  * Simulates a RESTful routing system without using a framework.
+ * Implemented as a singleton to ensure only one router instance exists.
  */
 public class Router {
+    // Singleton instance
+    private static Router instance;
     private final JsonUtil jsonUtil;
     private final List<Route> routes = new ArrayList<>();
 
     /**
-     * Constructor with only JsonUtil dependency.
+     * Private constructor to prevent instantiation.
      */
-    public Router() {
-        this.jsonUtil = new JsonUtil();
-        // Dependency setup
-        UserRepository userRepository = new UserRepository();
-        UserService userService = new UserService(userRepository);
-        AuthService authService = new AuthService(userService);
-        UserController userController = new UserController(userService);
-        AuthController authController = new AuthController(authService);
-
-        // User routes
-        pushRoute("POST", "/users", (path, body, headers) -> userController.createUser(body));
-        pushRoute("PUT", Pattern.compile("/users/\\d+"), (path, body, headers) -> {
-            String id = path.substring(path.lastIndexOf('/') + 1);
-            return userController.updateUser(id, body);
-        });
-
-        // Auth routes
-        pushRoute("POST", "/auth/login", (path, body, headers) -> authController.login(body));
-        pushRoute("GET", "/auth/getme", (path, body, headers) -> authController.getMe(headers));
-        pushRoute("POST", "/auth/logout", (path, body, headers) -> authController.logout(headers));
+    private Router() {
+        this.jsonUtil = JsonUtil.getInstance();
     }
 
     /**
-     * Dynamically push a route with an action handler.
+     * Get the singleton instance of Router.
+     * 
+     * @return The Router instance
      */
-    public void pushRoute(String method, Object pathMatcher, TriFunction<String, String, Map<String, String>, String> action) {
-        routes.add(new Route(method, pathMatcher, action));
+    public static synchronized Router getInstance() {
+        if (instance == null) {
+            instance = new Router();
+        }
+        return instance;
+    }
+
+    /**
+     * Initialize routes with controllers.
+     * This method should be called after getting the instance.
+     */
+    public void initializeRoutes() {
+        routes.clear();
+        routes.addAll(UserRoutes.getRoutes());
+        routes.addAll(ProductRoutes.getRoutes());
+        routes.addAll(AuthRoutes.getRoutes());
     }
 
     public String handleRequest(String method, String path, Map<String, String> headers, String body) {
@@ -72,11 +63,6 @@ public class Router {
         }
     }
 
-    public String parseRequestBody(InputStream inputStream) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-            return reader.lines().collect(Collectors.joining("\n"));
-        }
-    }
 
     private String createNotFoundResponse(String method, String path) {
         Map<String, Object> error = new HashMap<>();
@@ -94,7 +80,7 @@ public class Router {
     }
 
     // Route class to encapsulate route information
-    private static class Route {
+    public static class Route {
 
         private final String method;
         private final Object pathMatcher; // Can be String or Pattern
@@ -124,3 +110,4 @@ public class Router {
         }
     }
 }
+

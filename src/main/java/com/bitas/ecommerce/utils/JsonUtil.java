@@ -13,8 +13,23 @@ import java.util.Map;
  * Utility class for simple JSON serialization and deserialization.
  * Provides basic methods to convert between Java objects and JSON strings.
  * This is a simplified implementation without external dependencies.
+ * Implemented as a singleton to ensure only one instance exists.
  */
 public class JsonUtil {
+    // Singleton instance
+    private static JsonUtil instance;
+
+    /**
+     * Get the singleton instance of JsonUtil.
+     * 
+     * @return The JsonUtil instance
+     */
+    public static synchronized JsonUtil getInstance() {
+        if (instance == null) {
+            instance = new JsonUtil();
+        }
+        return instance;
+    }
 
     /**
      * Convert a Java object to a JSON string

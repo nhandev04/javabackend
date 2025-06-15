@@ -1,7 +1,7 @@
 package com.bitas.ecommerce.utils.database;
 
-import com.bitas.ecommerce.schema.ProductSchema;
-import com.bitas.ecommerce.schema.UserSchema;
+import com.bitas.ecommerce.model.Product;
+import com.bitas.ecommerce.model.User;
 
 import java.sql.Connection;
 import java.sql.Statement;
@@ -26,13 +26,13 @@ public class DatabaseInitializer {
     public void init() {
         try (Statement stmt = connection.createStatement()) {
             // Tạo bảng Product nếu chưa có
-            tryExecute(stmt, ProductSchema.CREATE_TABLE, "Create Product table");
-            tryExecute(stmt, ProductSchema.CREATE_INDEX_CATEGORY, "Create index on Product category");
-            tryExecute(stmt, ProductSchema.CREATE_INDEX_ACTIVE, "Create index on Product active status");
+            tryExecute(stmt, Product.CREATE_TABLE, "Create Product table");
+            tryExecute(stmt, Product.CREATE_INDEX_CATEGORY, "Create index on Product category");
+            tryExecute(stmt, Product.CREATE_INDEX_ACTIVE, "Create index on Product active status");
 
             // Tạo bảng User nếu chưa có
-            tryExecute(stmt, UserSchema.CREATE_TABLE, "Create User table");
-            tryExecute(stmt, UserSchema.CREATE_INDEX_ACTIVE, "Create index on User active status");
+            tryExecute(stmt, User.CREATE_TABLE, "Create User table");
+            tryExecute(stmt, User.CREATE_INDEX_ACTIVE, "Create index on User active status");
 
             System.out.println("Database schema initialized successfully.");
         } catch (Exception e) {

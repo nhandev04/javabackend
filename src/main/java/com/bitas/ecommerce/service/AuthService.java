@@ -3,6 +3,7 @@ package com.bitas.ecommerce.service;
 import com.bitas.ecommerce.model.User;
 import com.bitas.ecommerce.utils.auth.JWT;
 import com.bitas.ecommerce.utils.AppConfig;
+import com.bitas.ecommerce.utils.JsonUtil;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -26,7 +27,7 @@ public class AuthService {
                 payload.put("id", user.getId());
                 payload.put("username", user.getUsername());
                 payload.put("role", user.getRole());
-                String payloadJson = new com.bitas.ecommerce.utils.JsonUtil().toJson(payload);
+                String payloadJson = JsonUtil.getInstance().toJson(payload);
                 return JWT.sign(payloadJson, jwtSecret);
             }
         }
@@ -37,7 +38,7 @@ public class AuthService {
         if (token == null || token.isEmpty()) return Optional.empty();
         if (!JWT.verify(token, jwtSecret)) return Optional.empty();
         String payloadJson = JWT.getPayload(token);
-        Map payload = new com.bitas.ecommerce.utils.JsonUtil().fromJson(payloadJson, Map.class);
+        Map payload = JsonUtil.getInstance().fromJson(payloadJson, Map.class);
         Long userId = Long.parseLong(payload.get("id").toString());
         return userService.getUserById(userId);
     }
@@ -47,4 +48,3 @@ public class AuthService {
         return true;
     }
 }
-
